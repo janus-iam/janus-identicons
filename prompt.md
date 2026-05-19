@@ -526,3 +526,7 @@ Avoid:
 ---
 
 Give me Containerfile for the api
+
+--- 
+
+Add observability with otel
