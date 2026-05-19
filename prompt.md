@@ -526,3 +526,17 @@ Avoid:
 ---
 
 Give me Containerfile for the api
+
+
+---
+
+New idea :
+
+“Symmetric Sigil Identicons”
+
+radial geometry,
+layered arcs,
+orbiting nodes,
+deterministic glyph center,
+constrained palettes,
+optional animation.

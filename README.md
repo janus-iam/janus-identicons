@@ -1,6 +1,6 @@
 # Janus Identicons
 
-Deterministic gradient-blob SVG identicons from any string. Three layers share one renderer:
+Deterministic **symmetric sigil** SVG identicons from any string — radial arcs, orbiting nodes, and a hash-chosen center glyph on constrained palettes. Three layers share one renderer:
 
 - **identicon-core** — pure Rust SVG engine
 - **identicon-wasm** — browser bindings (`wasm-bindgen`)

@@ -1,6 +1,6 @@
 mod bezier;
-mod blob;
 mod hash;
+mod sigil;
 mod palette;
 mod prng;
 mod render;

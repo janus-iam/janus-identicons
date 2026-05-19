@@ -1,6 +1,8 @@
 use crate::bezier::write_f32;
-use crate::blob::{Accent, BackgroundStyle, RenderedBlob, palette_color};
 use crate::palette::Palette;
+use crate::sigil::{palette_color, ArcLayer, BackgroundStyle, CenterGlyph, OrbitNode};
+use crate::sigil::{write_arc_path, write_center_glyph};
+
 pub struct SvgBuilder {
     out: String,
     animated: bool,
@@ -42,30 +44,23 @@ impl SvgBuilder {
         self.out.push_str("</svg>");
     }
 
-    pub fn write_background_gradient(
+    pub fn write_background(
         &mut self,
         palette: &Palette,
         style: BackgroundStyle,
-        gradient_angle: f32,
+        size: u32,
     ) {
-        let (bg_start, bg_end) = match style {
+        let (bg, accent) = match style {
             BackgroundStyle::Light => (palette.bg_light, palette.colors[0]),
-            BackgroundStyle::Dark => (palette.bg_dark, palette.colors[2]),
+            BackgroundStyle::Dark => (palette.bg_dark, palette.colors[1]),
         };
 
-        let rad = gradient_angle.to_radians();
-        let x2 = rad.cos();
-        let y2 = rad.sin();
+        self.out.push_str("<radialGradient id=\"bg\" cx=\"0.5\" cy=\"0.5\" r=\"0.72\">");
+        write_simple_stop(&mut self.out, 0.0, bg, 1.0);
+        write_simple_stop(&mut self.out, 1.0, accent, 0.2);
+        self.out.push_str("</radialGradient>");
 
-        self.out
-            .push_str("<linearGradient id=\"bg\" x1=\"0\" y1=\"0\" x2=\"");
-        write_f32(&mut self.out, x2);
-        self.out.push_str("\" y2=\"");
-        write_f32(&mut self.out, y2);
-        self.out.push_str("\">");
-        write_simple_stop(&mut self.out, 0.0, bg_start, 1.0);
-        write_simple_stop(&mut self.out, 1.0, bg_end, 0.35);
-        self.out.push_str("</linearGradient>");
+        let _ = size;
     }
 
     pub fn write_background_rect(&mut self) {
@@ -73,86 +68,137 @@ impl SvgBuilder {
             .push_str(r#"<rect width="100%" height="100%" fill="url(#bg)"/>"#);
     }
 
-    pub fn write_blob_gradient(
-        &mut self,
-        id: &str,
-        blob: &RenderedBlob,
-        palette: &Palette,
-        size: u32,
-    ) {
-        let c0 = palette_color(palette, blob.color_indices[0]);
-        let c1 = palette_color(palette, blob.color_indices[1]);
-        let c2 = palette_color(palette, blob.color_indices[2]);
-
-        if blob.use_radial {
-            self.out.push_str("<radialGradient id=\"");
-            self.out.push_str(id);
-            self.out.push_str("\" cx=\"");
-            write_f32(&mut self.out, blob.cx / size as f32);
+    pub fn write_guide_rings(&mut self, cx: f32, cy: f32, size: f32, color: &str, opacity: f32) {
+        let max_r = size * 0.44;
+        for i in 1..=3 {
+            let r = max_r * (i as f32 / 3.0);
+            self.out.push_str("<circle cx=\"");
+            write_f32(&mut self.out, cx);
             self.out.push_str("\" cy=\"");
-            write_f32(&mut self.out, blob.cy / size as f32);
-            self.out.push_str("\" r=\"0.5\">");
-            write_simple_stop(&mut self.out, 0.0, c0, blob.opacity);
-            write_simple_stop(&mut self.out, 0.55, c1, blob.opacity * 0.75);
-            write_simple_stop(&mut self.out, 1.0, c2, 0.15);
-            self.out.push_str("</radialGradient>");
-        } else {
-            self.out.push_str("<linearGradient id=\"");
-            self.out.push_str(id);
-            self.out.push_str("\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\">");
-            write_simple_stop(&mut self.out, 0.0, c0, blob.opacity);
-            write_simple_stop(&mut self.out, 0.5, c1, blob.opacity * 0.8);
-            write_simple_stop(&mut self.out, 1.0, c2, 0.2);
-            if self.animated {
-                let dur = 6 + (self.anim_seed % 5);
-                self.out
-                    .push_str("<animate attributeName=\"x1\" values=\"0;0.3;0\" dur=\"");
-                write_u32(&mut self.out, dur);
-                self.out.push_str("s\" repeatCount=\"indefinite\"/>");
-            }
-            self.out.push_str("</linearGradient>");
+            write_f32(&mut self.out, cy);
+            self.out.push_str("\" r=\"");
+            write_f32(&mut self.out, r);
+            self.out.push_str("\" fill=\"none\" stroke=\"");
+            self.out.push_str(color);
+            self.out.push_str("\" stroke-opacity=\"");
+            write_f32(&mut self.out, opacity);
+            self.out.push_str("\" stroke-width=\"0.6\"/>");
         }
     }
 
-    pub fn write_blob_path(&mut self, grad_id: &str, blob: &RenderedBlob) {
-        self.out.push_str("<path fill=\"url(#");
-        self.out.push_str(grad_id);
-        self.out.push_str(")\" d=\"");
-        self.out.push_str(&blob.path_d);
-        self.out.push('"');
+    pub fn begin_orbit_group(&mut self, cx: f32, cy: f32, layer: u32) {
+        self.out.push_str("<g");
         if self.animated {
-            self.out.push_str(
-                " opacity=\"0.85\"><animate attributeName=\"opacity\" values=\"0.75;0.95;0.75\" dur=\"5s\" repeatCount=\"indefinite\"/></path>",
-            );
+            let dur = 18 + ((self.anim_seed + layer) % 12);
+            let dir = if layer.is_multiple_of(2) { 1.0 } else { -1.0 };
+            self.out.push_str("><animateTransform attributeName=\"transform\" type=\"rotate\" from=\"0 ");
+            write_f32(&mut self.out, cx);
+            self.out.push(' ');
+            write_f32(&mut self.out, cy);
+            self.out.push_str("\" to=\"");
+            write_f32(&mut self.out, 360.0 * dir);
+            self.out.push(' ');
+            write_f32(&mut self.out, cx);
+            self.out.push(' ');
+            write_f32(&mut self.out, cy);
+            self.out.push_str("\" dur=\"");
+            write_u32(&mut self.out, dur);
+            self.out.push_str("s\" repeatCount=\"indefinite\"/>");
+        }
+        self.out.push('>');
+    }
+
+    pub fn end_group(&mut self) {
+        self.out.push_str("</g>");
+    }
+
+    pub fn write_arc(
+        &mut self,
+        cx: f32,
+        cy: f32,
+        layer: &ArcLayer,
+        palette: &Palette,
+    ) {
+        let color = palette_color(palette, layer.color_index);
+        self.out.push_str("<path d=\"");
+        write_arc_path(&mut self.out, cx, cy, layer);
+        self.out.push_str("\" fill=\"none\" stroke=\"");
+        self.out.push_str(color);
+        self.out.push_str("\" stroke-width=\"");
+        write_f32(&mut self.out, layer.stroke_width);
+        self.out.push_str("\" stroke-opacity=\"");
+        write_f32(&mut self.out, layer.opacity);
+        self.out.push_str("\" stroke-linecap=\"round\"");
+        if self.animated {
+            let dur = 5 + (self.anim_seed % 4);
+            self.out.push_str("><animate attributeName=\"stroke-opacity\" values=\"");
+            write_f32(&mut self.out, layer.opacity * 0.7);
+            self.out.push(';');
+            write_f32(&mut self.out, layer.opacity);
+            self.out.push(';');
+            write_f32(&mut self.out, layer.opacity * 0.7);
+            self.out.push_str("\" dur=\"");
+            write_u32(&mut self.out, dur);
+            self.out.push_str("s\" repeatCount=\"indefinite\"/></path>");
         } else {
             self.out.push_str("/>");
         }
     }
 
-    pub fn write_accent(&mut self, palette: &Palette, accent: &Accent, idx: usize) {
-        let color = palette_color(palette, accent.color_index);
+    pub fn write_orbit_node(&mut self, cx: f32, cy: f32, node: &OrbitNode, palette: &Palette) {
+        let (x, y) = (
+            cx + node.radius * node.angle.cos(),
+            cy + node.radius * node.angle.sin(),
+        );
+        let color = palette_color(palette, node.color_index);
         self.out.push_str("<circle cx=\"");
-        write_f32(&mut self.out, accent.x);
+        write_f32(&mut self.out, x);
         self.out.push_str("\" cy=\"");
-        write_f32(&mut self.out, accent.y);
+        write_f32(&mut self.out, y);
         self.out.push_str("\" r=\"");
-        write_f32(&mut self.out, accent.r);
+        write_f32(&mut self.out, node.radius_px);
         self.out.push_str("\" fill=\"");
         self.out.push_str(color);
         self.out.push_str("\" fill-opacity=\"");
-        write_f32(&mut self.out, accent.opacity);
+        write_f32(&mut self.out, node.opacity);
         self.out.push('"');
-        if self.animated && idx == 0 {
+        if self.animated {
             self.out.push_str("><animate attributeName=\"r\" values=\"");
-            write_f32(&mut self.out, accent.r);
+            write_f32(&mut self.out, node.radius_px * 0.85);
             self.out.push(';');
-            write_f32(&mut self.out, accent.r * 1.2);
+            write_f32(&mut self.out, node.radius_px * 1.15);
             self.out.push(';');
-            write_f32(&mut self.out, accent.r);
-            self.out
-                .push_str("\" dur=\"4s\" repeatCount=\"indefinite\"/></circle>");
+            write_f32(&mut self.out, node.radius_px * 0.85);
+            self.out.push_str("\" dur=\"3s\" repeatCount=\"indefinite\"/></circle>");
         } else {
             self.out.push_str("/>");
+        }
+    }
+
+    pub fn write_center(
+        &mut self,
+        glyph: CenterGlyph,
+        cx: f32,
+        cy: f32,
+        size: f32,
+        palette: &Palette,
+        color_index: usize,
+    ) {
+        let color = palette_color(palette, color_index);
+        if self.animated {
+            self.out.push_str("<g><animateTransform attributeName=\"transform\" type=\"rotate\" from=\"0 ");
+            write_f32(&mut self.out, cx);
+            self.out.push(' ');
+            write_f32(&mut self.out, cy);
+            self.out.push_str("\" to=\"360 ");
+            write_f32(&mut self.out, cx);
+            self.out.push(' ');
+            write_f32(&mut self.out, cy);
+            self.out.push_str("\" dur=\"24s\" repeatCount=\"indefinite\"/>");
+            write_center_glyph(&mut self.out, glyph, cx, cy, size, color, 0.95);
+            self.out.push_str("</g>");
+        } else {
+            write_center_glyph(&mut self.out, glyph, cx, cy, size, color, 0.95);
         }
     }
 }
