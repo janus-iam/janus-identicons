@@ -1,0 +1,11 @@
+[package]
+name = "identicon-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Deterministic gradient-blob SVG identicon generator"
+
+[dependencies]
+blake3 = "1"
+rand_xoshiro = "0.6"
+smallvec = "1"

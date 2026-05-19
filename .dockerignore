@@ -1,0 +1,9 @@
+/target/
+**/*.rs.bk
+.git/
+.github/
+.cursor/
+*.md
+!README.md
+crates/identicon-wasm/pkg/
+prompt.md

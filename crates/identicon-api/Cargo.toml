@@ -1,0 +1,20 @@
+[package]
+name = "identicon-api"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "HTTP API for Janus identicons"
+
+[[bin]]
+name = "identicon-api"
+path = "src/main.rs"
+
+[dependencies]
+axum = "0.8"
+blake3 = "1"
+identicon-core = { path = "../identicon-core" }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
+
+[dev-dependencies]
+tower = "0.5"
