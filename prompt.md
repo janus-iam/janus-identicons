@@ -527,7 +527,7 @@ Avoid:
 
 Give me Containerfile for the api
 
---- 
+---
 
 ##  observability
 
@@ -554,6 +554,6 @@ render duration
 SVG size
 status codes
 
-## structured logs 
+## structured logs
 
 use https://github.com/tokio-rs/tracing
