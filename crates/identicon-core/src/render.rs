@@ -1,8 +1,8 @@
-use crate::blob::{generate_accents, generate_blob_specs, render_blobs, RenderParams};
+use crate::blob::{RenderParams, generate_accents, generate_blob_specs, render_blobs};
 use crate::hash::{hash_input, validate_input};
 use crate::palette::{palette_by_index, palette_by_theme};
 use crate::prng::Prng;
-use crate::svg::{clamp_size, SvgBuilder};
+use crate::svg::{SvgBuilder, clamp_size};
 use crate::{RenderError, RenderOptions};
 
 pub fn render_identicon_inner(input: &str, opts: &RenderOptions) -> Result<String, RenderError> {
