@@ -46,7 +46,7 @@ jobs:
               run: test -f "${{ env.WASM_PKG_DIR }}/package.json"
 
             - name: Upload package artifact
-              uses: actions/upload-artifact@v8
+              uses: actions/upload-artifact@v7
               with:
                   name: identicon-wasm-pkg
                   path: ${{ env.WASM_PKG_DIR }}
