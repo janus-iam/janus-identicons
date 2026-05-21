@@ -33,7 +33,7 @@ jobs:
               uses: taiki-e/install-action@wasm-pack
 
             - name: Build package with wasm-pack
-              run: wasm-pack build crates/identicon-wasm --target bundler --release
+              run: wasm-pack build crates/identicon-wasm --target bundler --release --scope janus
 
             - name: Verify generated package.json
               run: test -f "${{ env.WASM_PKG_DIR }}/package.json"
@@ -73,6 +73,4 @@ jobs:
 
             - name: Publish to npm registry
               working-directory: ${{ env.WASM_PKG_DIR }}
-              run: bun publish --provenance --access public
-              env:
-                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: bunx npm publish --provenance
