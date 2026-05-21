@@ -30,6 +30,12 @@ Responses are `image/svg+xml` with `Cache-Control: public, immutable, max-age=31
 Environment:
 
 - `PORT` — listen port (default `3000`)
+- `RUST_LOG` — tracing filter (default `identicon_api=info,tower_http=info`)
+
+Observability:
+
+- `GET /health` — `{"status":"ok"}`
+- `GET /metrics` — Prometheus text (`identicon_requests_total`, `identicon_render_duration_seconds`, `identicon_svg_size_bytes`)
 
 ### Rust library
 
