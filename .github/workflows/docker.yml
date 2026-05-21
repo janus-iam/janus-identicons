@@ -2,14 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [main]
         tags: ["v*"]
-        paths:
-            - "Containerfile"
-            - "crates/identicon-api"
-            - "crates/identicon-core"
-            - "Cargo.toml"
-            - "Cargo.lock"
     workflow_dispatch:
 
 concurrency:

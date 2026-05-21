@@ -69,7 +69,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Download package artifact
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v8
               with:
                   name: identicon-wasm-pkg
                   path: ${{ env.WASM_PKG_DIR }}
