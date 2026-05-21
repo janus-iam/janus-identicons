@@ -42,7 +42,7 @@ jobs:
               uses: taiki-e/install-action@wasm-pack
 
             - name: Build package with wasm-pack
-              run: wasm-pack build crates/identicon-wasm --target bundler --release --scope janus
+              run: wasm-pack build crates/identicon-wasm --target bundler --release --scope janus-iam
 
             - name: Verify generated package.json
               run: test -f "${{ env.WASM_PKG_DIR }}/package.json"

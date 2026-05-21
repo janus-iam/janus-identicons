@@ -11,5 +11,5 @@ container:
 # Build the WASM npm package (wasm-pack via Bun; matches CI bundler target).
 wasm:
     rustup target add wasm32-unknown-unknown
-    bunx wasm-pack build {{wasm_crate}} --target bundler --release --scope janus
+    bunx wasm-pack build {{wasm_crate}} --target bundler --release --scope janus-iam
     test -f {{wasm_pkg_dir}}/package.json
