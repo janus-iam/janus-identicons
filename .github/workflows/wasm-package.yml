@@ -8,6 +8,10 @@ on:
         branches: [main]
     workflow_dispatch:
 
+permissions:
+    contents: read
+    id-token: write
+
 concurrency:
     group: wasm-package-${{ github.ref }}
     cancel-in-progress: true
@@ -51,9 +55,6 @@ jobs:
             (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
             || github.event_name == 'workflow_dispatch'
         runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            id-token: write
         steps:
             - name: Download package artifact
               uses: actions/download-artifact@v4
@@ -61,8 +62,7 @@ jobs:
                   name: identicon-wasm-pkg
                   path: ${{ env.WASM_PKG_DIR }}
 
-            - name: Setup Bun
-              uses: oven-sh/setup-bun@v2
+            - uses: oven-sh/setup-bun@v2
 
             - name: Set version from release tag
               if: startsWith(github.ref, 'refs/tags/v')
@@ -71,6 +71,6 @@ jobs:
                   VERSION="${GITHUB_REF#refs/tags/v}"
                   bun pm pkg set "version=${VERSION}"
 
-            - name: Publish to npm registry
+            - name: Publish package
               working-directory: ${{ env.WASM_PKG_DIR }}
-              run: bunx npm publish --provenance
+              run: bunx npm publish --provenance --access public
