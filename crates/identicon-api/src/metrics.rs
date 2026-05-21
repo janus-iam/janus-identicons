@@ -33,8 +33,11 @@ impl Metrics {
         .expect("identicon_render_duration_seconds metric");
 
         let svg_size_bytes = HistogramVec::new(
-            HistogramOpts::new("identicon_svg_size_bytes", "Rendered SVG payload size in bytes")
-                .buckets(prometheus::exponential_buckets(512.0, 2.0, 8).expect("buckets")),
+            HistogramOpts::new(
+                "identicon_svg_size_bytes",
+                "Rendered SVG payload size in bytes",
+            )
+            .buckets(prometheus::exponential_buckets(512.0, 2.0, 8).expect("buckets")),
             &["status"],
         )
         .expect("identicon_svg_size_bytes metric");

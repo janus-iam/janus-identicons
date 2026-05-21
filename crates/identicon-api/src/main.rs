@@ -11,7 +11,11 @@ use axum::{
 };
 use identicon_core::{RenderError, RenderOptions, Theme};
 use metrics::{Metrics, route_label};
-use std::{env, sync::Arc, time::{Duration, Instant}};
+use std::{
+    env,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 use tracing::Level;
 
 #[derive(Clone)]
@@ -151,18 +155,23 @@ fn app(state: AppState) -> Router {
         .route("/health", get(health_handler))
         .route("/metrics", get(metrics_handler))
         .route("/{input}", get(identicon_handler))
-        .layer(middleware::from_fn_with_state(state.clone(), track_requests))
-        .layer(tower_http::trace::TraceLayer::new_for_http().make_span_with(
-            |request: &Request<Body>| {
-                tracing::span!(
-                    Level::INFO,
-                    "http_request",
-                    method = %request.method(),
-                    uri = %request.uri(),
-                    route = route_label(request.uri().path()),
-                )
-            },
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            track_requests,
         ))
+        .layer(
+            tower_http::trace::TraceLayer::new_for_http().make_span_with(
+                |request: &Request<Body>| {
+                    tracing::span!(
+                        Level::INFO,
+                        "http_request",
+                        method = %request.method(),
+                        uri = %request.uri(),
+                        route = route_label(request.uri().path()),
+                    )
+                },
+            ),
+        )
         .with_state(state)
 }
 
