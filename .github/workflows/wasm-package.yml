@@ -70,6 +70,7 @@ jobs:
               run: |
                   VERSION="${GITHUB_REF#refs/tags/v}"
                   bun pm pkg set "version=${VERSION}"
+                  bunx npm pkg fix
 
             - name: Publish package
               working-directory: ${{ env.WASM_PKG_DIR }}
