@@ -2,15 +2,21 @@ name: WASM package
 
 on:
     push:
-        branches: [main]
         tags: ["v*"]
         paths:
             - "crates/identicon-wasm"
             - "crates/identicon-core"
             - "Cargo.toml"
             - "Cargo.lock"
+            - ".github/workflows/wasm-package.yml"
     pull_request:
         branches: [main]
+        paths:
+            - "crates/identicon-wasm"
+            - "crates/identicon-core"
+            - "Cargo.toml"
+            - "Cargo.lock"
+            - ".github/workflows/wasm-package.yml"
     workflow_dispatch:
 
 permissions:
@@ -18,7 +24,8 @@ permissions:
     id-token: write
 
 concurrency:
-    group: wasm-package-${{ github.ref }}
+    # Same commit pushed as branch + tag triggers one run (cancels the other).
+    group: wasm-package-${{ github.sha }}
     cancel-in-progress: true
 
 env:

@@ -13,7 +13,8 @@ on:
     workflow_dispatch:
 
 concurrency:
-    group: docker-${{ github.ref }}
+    # Same commit pushed as branch + tag triggers one run (cancels the other).
+    group: docker-${{ github.sha }}
     cancel-in-progress: true
 
 env:
