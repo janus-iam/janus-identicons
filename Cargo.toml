@@ -3,6 +3,6 @@ resolver = "2"
 members = ["crates/identicon-core", "crates/identicon-wasm", "crates/identicon-api"]
 
 [workspace.package]
-version = "0.1.10"
+version = "0.1.11"
 edition = "2024"
 license = "MIT"
