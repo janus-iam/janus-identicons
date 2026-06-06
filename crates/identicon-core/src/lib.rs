@@ -6,7 +6,7 @@ mod prng;
 mod render;
 mod svg;
 
-pub use palette::{palette_by_index, palette_by_theme, Theme, PALETTE_COUNT, PALETTES};
+pub use palette::{PALETTE_COUNT, PALETTES, Theme, palette_by_index, palette_by_theme};
 pub use render::render_identicon_inner;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -54,7 +54,10 @@ pub fn render_identicon(input: &str) -> String {
     })
 }
 
-pub fn render_identicon_with_options(input: &str, opts: &RenderOptions) -> Result<String, RenderError> {
+pub fn render_identicon_with_options(
+    input: &str,
+    opts: &RenderOptions,
+) -> Result<String, RenderError> {
     render::render_identicon_inner(input, opts)
 }
 

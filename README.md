@@ -30,6 +30,12 @@ Responses are `image/svg+xml` with `Cache-Control: public, immutable, max-age=31
 Environment:
 
 - `PORT` — listen port (default `3000`)
+- `RUST_LOG` — tracing filter (default `identicon_api=info,tower_http=info`)
+
+Observability:
+
+- `GET /health` — `{"status":"ok"}`
+- `GET /metrics` — Prometheus text (`identicon_requests_total`, `identicon_render_duration_seconds`, `identicon_svg_size_bytes`)
 
 ### Rust library
 
@@ -69,7 +75,22 @@ bun add identicon-wasm
 import init, { render_identicon } from "identicon-wasm";
 ```
 
-Releases are built with `wasm-pack` and published with **Bun** from the generated `pkg/` tree ([.github/workflows/wasm-package.yml](.github/workflows/wasm-package.yml)) when you push a `v*` tag (e.g. `v0.1.0`) or run the workflow manually. Add an `NPM_TOKEN` [repository secret](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) (npm access token with publish rights; Bun uses it to publish to registry.npmjs.org).
+Releases are built with `wasm-pack` and published with **Bun** from the generated `pkg/` tree ([.github/workflows/wasm-package.yml](.github/workflows/wasm-package.yml)) when you push a `v*` tag (e.g. `v0.1.0`) or run the workflow manually. Publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) (OIDC) — no `NPM_TOKEN`.
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+**If publish returns 404**, check npm **Trusted publishing** for `@janus-iam/identicon-wasm`:
+
+| npm field | Must be |
+|-----------|---------|
+| Repository | `janus-iam/janus-identicons` |
+| Workflow filename | `wasm-package.yml` (not the workflow display name) |
+| Environment | empty, unless you add `environment: …` to the `publish` job in the workflow |
+
+Local `npm publish` still needs `npm login` and membership in the `@janus-iam` org (404 locally usually means no scope access, not missing OIDC).
 
 ## Input rules
 

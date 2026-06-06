@@ -1,80 +1,83 @@
 name: WASM package
 
 on:
-  push:
-    branches: [main]
-    tags: ["v*"]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
+    push:
+        tags: ["v*"]
+        paths:
+            - "crates/identicon-wasm"
+            - "crates/identicon-core"
+            - "Cargo.toml"
+            - "Cargo.lock"
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    id-token: write
 
 concurrency:
-  group: wasm-package-${{ github.ref }}
-  cancel-in-progress: true
+    # Same commit pushed as branch + tag triggers one run (cancels the other).
+    group: wasm-package-${{ github.sha }}
+    cancel-in-progress: true
 
 env:
-  WASM_PKG_DIR: crates/identicon-wasm/pkg
+    WASM_PKG_DIR: crates/identicon-wasm/pkg
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
+            - name: Install Rust
+              uses: dtolnay/rust-toolchain@stable
+              with:
+                  targets: wasm32-unknown-unknown
 
-      - uses: Swatinem/rust-cache@v2
+            - uses: Swatinem/rust-cache@v2
 
-      - name: Install wasm-pack
-        uses: taiki-e/install-action@wasm-pack
+            - name: Install wasm-pack
+              uses: taiki-e/install-action@wasm-pack
 
-      - name: Build package with wasm-pack
-        run: wasm-pack build crates/identicon-wasm --target web --release
+            - name: Build package with wasm-pack
+              run: wasm-pack build crates/identicon-wasm --target bundler --release --scope janus-iam
 
-      - name: Verify generated package.json
-        run: test -f "${{ env.WASM_PKG_DIR }}/package.json"
+            - name: Verify generated package.json
+              run: test -f "${{ env.WASM_PKG_DIR }}/package.json"
 
-      - name: Upload package artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: identicon-wasm-pkg
-          path: ${{ env.WASM_PKG_DIR }}
-          if-no-files-found: error
+            - name: Upload package artifact
+              uses: actions/upload-artifact@v7
+              with:
+                  name: identicon-wasm-pkg
+                  path: ${{ env.WASM_PKG_DIR }}
+                  if-no-files-found: error
 
-  publish:
-    needs: build
-    if: >-
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
-      || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - name: Download package artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: identicon-wasm-pkg
-          path: ${{ env.WASM_PKG_DIR }}
+    publish:
+        needs: build
+        if: >-
+            (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+            || github.event_name == 'workflow_dispatch'
+        runs-on: ubuntu-latest
+        steps:
+            - name: Download package artifact
+              uses: actions/download-artifact@v8
+              with:
+                  name: identicon-wasm-pkg
+                  path: ${{ env.WASM_PKG_DIR }}
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+            - uses: oven-sh/setup-bun@v2
 
-      - uses: actions/setup-node@v6
-        with:
-          node-version: lts/*
+            - uses: actions/setup-node@v6
+              with:
+                node-version: lts/*
 
-      - name: Set version from release tag
-        if: startsWith(github.ref, 'refs/tags/v')
-        working-directory: ${{ env.WASM_PKG_DIR }}
-        run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
-          bun pm pkg set "version=${VERSION}"
+            - name: Set version from release tag
+              if: startsWith(github.ref, 'refs/tags/v')
+              working-directory: ${{ env.WASM_PKG_DIR }}
+              run: |
+                VERSION="${GITHUB_REF#refs/tags/v}"
+                bun pm pkg set "version=${VERSION}"
 
-      - name: Publish to npm registry
-        working-directory: ${{ env.WASM_PKG_DIR }}
-        run: npm publish --provenance --verbose
+            - name: Publish to npm registry
+              working-directory: ${{ env.WASM_PKG_DIR }}
+              run: npm publish --provenance --verbose

@@ -527,6 +527,33 @@ Avoid:
 
 Give me Containerfile for the api
 
---- 
+---
 
-Add observability with otel
+##  observability
+
+## health endpoint
+
+GET /health
+
+Return:
+
+{ "status": "ok" }
+
+## metrics endpoint
+
+GET /metrics
+
+Use:
+
+Prometheus format
+
+Track:
+
+request count
+render duration
+SVG size
+status codes
+
+## structured logs
+
+use https://github.com/tokio-rs/tracing
