@@ -557,3 +557,16 @@ status codes
 ## structured logs
 
 use https://github.com/tokio-rs/tracing
+
+
+----
+
+Create a helm charts to deploy the api in kubernetes
+
+Add industry standards like prometheus, liveness and health probe, network policy support, both ingress and gateway etc
+
+You will also create the github action to build and publish this helm charts
+
+----
+
+Work to remove duplication github action dual run
