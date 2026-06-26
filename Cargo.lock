@@ -280,7 +280,7 @@ dependencies = [
 
 [[package]]
 name = "identicon-api"
-version = "0.1.10"
+version = "0.1.11"
 dependencies = [
  "axum",
  "blake3",
@@ -297,7 +297,7 @@ dependencies = [
 
 [[package]]
 name = "identicon-core"
-version = "0.1.10"
+version = "0.1.11"
 dependencies = [
  "blake3",
  "rand_xoshiro",
@@ -306,7 +306,7 @@ dependencies = [
 
 [[package]]
 name = "identicon-wasm"
-version = "0.1.10"
+version = "0.1.11"
 dependencies = [
  "identicon-core",
  "wasm-bindgen",

@@ -67,14 +67,17 @@ jobs:
 
             - uses: oven-sh/setup-bun@v2
 
+            - uses: actions/setup-node@v6
+              with:
+                node-version: lts/*
+
             - name: Set version from release tag
               if: startsWith(github.ref, 'refs/tags/v')
               working-directory: ${{ env.WASM_PKG_DIR }}
               run: |
-                  VERSION="${GITHUB_REF#refs/tags/v}"
-                  bun pm pkg set "version=${VERSION}"
-                  bunx npm pkg fix
+                VERSION="${GITHUB_REF#refs/tags/v}"
+                bun pm pkg set "version=${VERSION}"
 
-            - name: Publish package
+            - name: Publish to npm registry
               working-directory: ${{ env.WASM_PKG_DIR }}
-              run: bunx npm publish --provenance --access public
+              run: npm publish --provenance --verbose
