@@ -5,4 +5,5 @@ members = ["crates/identicon-core", "crates/identicon-wasm", "crates/identicon-a
 [workspace.package]
 version = "0.1.11"
 edition = "2024"
+rust-version = "1.85"
 license = "MIT"
