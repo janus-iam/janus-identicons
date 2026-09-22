@@ -570,3 +570,7 @@ You will also create the github action to build and publish this helm charts
 ----
 
 Work to remove duplication github action dual run
+
+----
+
+Ux decision : choose the best pattern : ribbon ?
