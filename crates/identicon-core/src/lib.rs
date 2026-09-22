@@ -1,11 +1,13 @@
 mod bezier;
 mod blob;
+mod engines;
 mod hash;
 mod palette;
 mod prng;
 mod render;
 mod svg;
 
+pub use engines::Engine;
 pub use palette::{PALETTE_COUNT, PALETTES, Theme, palette_by_index, palette_by_theme};
 pub use render::render_identicon_inner;
 
@@ -34,6 +36,8 @@ pub struct RenderOptions {
     pub theme: Option<Theme>,
     pub background: bool,
     pub animated: bool,
+    /// Visual engine; defaults to the original gradient blobs.
+    pub engine: Engine,
 }
 
 impl Default for RenderOptions {
@@ -43,6 +47,7 @@ impl Default for RenderOptions {
             theme: None,
             background: true,
             animated: false,
+            engine: Engine::Blob,
         }
     }
 }

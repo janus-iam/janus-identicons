@@ -9,7 +9,7 @@ use axum::{
     response::{IntoResponse, Response},
     routing::get,
 };
-use identicon_core::{RenderError, RenderOptions, Theme};
+use identicon_core::{Engine, RenderError, RenderOptions, Theme};
 use metrics::{Metrics, route_label};
 use std::{
     env,
@@ -29,6 +29,7 @@ struct IdenticonQuery {
     theme: Option<String>,
     background: Option<bool>,
     animated: Option<bool>,
+    engine: Option<String>,
 }
 
 async fn health_handler() -> impl IntoResponse {
@@ -66,11 +67,27 @@ async fn identicon_handler(
         None => None,
     };
 
+    let engine = match query.engine.as_deref() {
+        Some(name) => match Engine::from_name(name) {
+            Some(engine) => engine,
+            None => {
+                state.metrics.record_render(400, Duration::ZERO, 0);
+                return (
+                    StatusCode::BAD_REQUEST,
+                    "unknown engine; valid: blob, crest, voronoi, kaleido, ribbon, constellation, monogram",
+                )
+                    .into_response();
+            }
+        },
+        None => Engine::Blob,
+    };
+
     let opts = RenderOptions {
         size: query.size.unwrap_or(256),
         theme,
         background: query.background.unwrap_or(true),
         animated: query.animated.unwrap_or(false),
+        engine,
     };
 
     let started = Instant::now();
@@ -135,8 +152,13 @@ fn etag_payload(input: &str, opts: &RenderOptions) -> String {
         .map(|t| t.index().to_string())
         .unwrap_or_else(|| "auto".to_string());
     format!(
-        "{}|{}|{}|{}|{}",
-        input, opts.size, theme, opts.background, opts.animated
+        "{}|{}|{}|{}|{}|{}",
+        input,
+        opts.size,
+        theme,
+        opts.background,
+        opts.animated,
+        opts.engine.name()
     )
 }
 
@@ -304,5 +326,53 @@ mod tests {
             .await
             .unwrap();
         assert_ne!(default_body, resized_body);
+    }
+
+    #[tokio::test]
+    async fn engine_query_changes_output_and_rejects_unknown() {
+        let app = test_app();
+
+        let blob = app
+            .clone()
+            .oneshot(
+                Request::get("/alice?engine=blob")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let crest = app
+            .clone()
+            .oneshot(
+                Request::get("/alice?engine=crest")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        let unknown = app
+            .oneshot(
+                Request::get("/alice?engine=nope")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(blob.status(), StatusCode::OK);
+        assert_eq!(crest.status(), StatusCode::OK);
+        assert_eq!(unknown.status(), StatusCode::BAD_REQUEST);
+        assert_ne!(
+            blob.headers().get(header::ETAG).cloned(),
+            crest.headers().get(header::ETAG).cloned()
+        );
+
+        let blob_body = axum::body::to_bytes(blob.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let crest_body = axum::body::to_bytes(crest.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        assert_ne!(blob_body, crest_body);
     }
 }
