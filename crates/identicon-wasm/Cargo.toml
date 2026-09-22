@@ -2,6 +2,7 @@
 name = "identicon-wasm"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 license.workspace = true
 description = "WebAssembly bindings for Janus identicons"
 repository = "https://github.com/janus-iam/janus-identicons"
