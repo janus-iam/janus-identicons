@@ -1,5 +1,5 @@
 use rand_xoshiro::Xoshiro256PlusPlus;
-use rand_xoshiro::rand_core::{RngCore, SeedableRng};
+use rand_xoshiro::rand_core::{Rng, SeedableRng};
 
 pub struct Prng {
     inner: Xoshiro256PlusPlus,

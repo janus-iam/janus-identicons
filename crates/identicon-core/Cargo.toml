@@ -7,5 +7,5 @@ description = "Deterministic gradient-blob SVG identicon generator"
 
 [dependencies]
 blake3 = "1"
-rand_xoshiro = "0.6"
+rand_xoshiro = "0.8"
 smallvec = "1"
