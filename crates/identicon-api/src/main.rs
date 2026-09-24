@@ -112,7 +112,7 @@ async fn identicon_handler(
                 state.metrics.record_render(400, Duration::ZERO, 0);
                 return (
                     StatusCode::BAD_REQUEST,
-                    "unknown theme; valid: aurora, sunset, synthwave, nord, monochrome, oceanic, neon, pastel",
+                    unknown_theme_message(),
                 )
                     .into_response();
             }
@@ -197,6 +197,15 @@ async fn track_requests(
         .metrics
         .record_request(&method, &route, response.status().as_u16());
     response
+}
+
+fn unknown_theme_message() -> String {
+    let names = identicon_core::PALETTES
+        .iter()
+        .map(|palette| palette.name)
+        .collect::<Vec<_>>()
+        .join(", ");
+    format!("unknown theme; valid: {names}")
 }
 
 fn etag_payload(input: &str, opts: &RenderOptions) -> String {

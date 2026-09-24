@@ -102,7 +102,7 @@ Local `npm publish` still needs `npm login` and membership in the `@janus-iam` o
 
 ## Themes
 
-`aurora`, `sunset`, `synthwave`, `nord`, `monochrome`, `oceanic`, `neon`, `pastel`
+`aurora`, `sunset`, `synthwave`, `nord`, `monochrome`, `oceanic`, `neon`, `pastel`, `ciel`, `terre`, `mer`, `feu`
 
 ## Engines
 
