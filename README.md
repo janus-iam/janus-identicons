@@ -105,7 +105,7 @@ Local `npm publish` still needs `npm login` and membership in the `@janus-iam` o
 
 ## Engines
 
-`?engine=` selects the shape generator. Palettes stay the same across engines. The default, `blob`, is the original gradient-blob renderer.
+`?engine=` selects the shape generator. Palettes stay the same across engines. When `engine` is omitted, the HTTP API and the WASM package use `ribbon`. The Rust library default (`RenderOptions::default()`) stays `blob`.
 
 | Engine | Figure |
 |--------|--------|

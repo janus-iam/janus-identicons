@@ -79,7 +79,7 @@ async fn identicon_handler(
                     .into_response();
             }
         },
-        None => Engine::Blob,
+        None => Engine::Ribbon,
     };
 
     let opts = RenderOptions {
@@ -332,6 +332,20 @@ mod tests {
     async fn engine_query_changes_output_and_rejects_unknown() {
         let app = test_app();
 
+        let omitted = app
+            .clone()
+            .oneshot(Request::get("/alice").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        let ribbon = app
+            .clone()
+            .oneshot(
+                Request::get("/alice?engine=ribbon")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
         let blob = app
             .clone()
             .oneshot(
@@ -359,20 +373,34 @@ mod tests {
             .await
             .unwrap();
 
+        assert_eq!(omitted.status(), StatusCode::OK);
+        assert_eq!(ribbon.status(), StatusCode::OK);
         assert_eq!(blob.status(), StatusCode::OK);
         assert_eq!(crest.status(), StatusCode::OK);
         assert_eq!(unknown.status(), StatusCode::BAD_REQUEST);
+        assert_eq!(
+            omitted.headers().get(header::ETAG).cloned(),
+            ribbon.headers().get(header::ETAG).cloned()
+        );
         assert_ne!(
             blob.headers().get(header::ETAG).cloned(),
             crest.headers().get(header::ETAG).cloned()
         );
 
+        let omitted_body = axum::body::to_bytes(omitted.into_body(), usize::MAX)
+            .await
+            .unwrap();
+        let ribbon_body = axum::body::to_bytes(ribbon.into_body(), usize::MAX)
+            .await
+            .unwrap();
         let blob_body = axum::body::to_bytes(blob.into_body(), usize::MAX)
             .await
             .unwrap();
         let crest_body = axum::body::to_bytes(crest.into_body(), usize::MAX)
             .await
             .unwrap();
+        assert_eq!(omitted_body, ribbon_body);
+        assert_ne!(omitted_body, blob_body);
         assert_ne!(blob_body, crest_body);
     }
 }
