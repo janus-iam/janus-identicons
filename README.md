@@ -12,6 +12,7 @@ Deterministic SVG identicons from any string, with several visual engines. Three
 
 ```bash
 cargo run -p identicon-api
+curl -i http://localhost:3000/
 curl -i http://localhost:3000/alice
 curl http://localhost:3000/alice?size=128&theme=nord&animated=true
 curl http://localhost:3000/alice?engine=crest&theme=nord
