@@ -110,11 +110,7 @@ async fn identicon_handler(
             Some(t) => Some(t),
             None => {
                 state.metrics.record_render(400, Duration::ZERO, 0);
-                return (
-                    StatusCode::BAD_REQUEST,
-                    unknown_theme_message(),
-                )
-                    .into_response();
+                return (StatusCode::BAD_REQUEST, unknown_theme_message()).into_response();
             }
         },
         None => None,
