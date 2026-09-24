@@ -102,7 +102,22 @@ Local `npm publish` still needs `npm login` and membership in the `@janus-iam` o
 
 ## Themes
 
-`aurora`, `sunset`, `synthwave`, `nord`, `monochrome`, `oceanic`, `neon`, `pastel`, `ciel`, `terre`, `mer`, `feu`
+`?theme=` selects the palette. Omit it to let the hash pick one.
+
+| Theme | Palette |
+|--------|---------|
+| `aurora` | Teal, violet, pink, gold |
+| `sunset` | Orange, amber, rose |
+| `synthwave` | Magenta, cyan, purple |
+| `nord` | Frost blue, steel, lilac, moss |
+| `monochrome` | Warm ink and paper |
+| `oceanic` | Deep blue, turquoise |
+| `neon` | Green, red, yellow, cyan |
+| `pastel` | Blush, peach, mint, lilac |
+| `ciel` | Day blue, cloud, sun |
+| `terre` | Clay, sand, olive, brick |
+| `mer` | Deep teal, foam, marine ink |
+| `feu` | Ember, amber, gold |
 
 ## Engines
 
