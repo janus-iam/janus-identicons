@@ -33,9 +33,9 @@ pub const PALETTES: &[Palette] = &[
     },
     Palette {
         name: "monochrome",
-        bg_light: "#f5f5f5",
-        bg_dark: "#1a1a1a",
-        colors: &["#666666", "#888888", "#aaaaaa", "#444444", "#999999"],
+        bg_light: "#f4f1ec",
+        bg_dark: "#101010",
+        colors: &["#f7f4ef", "#c8c2b8", "#6f6a63", "#2c2a28", "#8e8880"],
     },
     Palette {
         name: "oceanic",
@@ -55,6 +55,30 @@ pub const PALETTES: &[Palette] = &[
         bg_dark: "#2d2a32",
         colors: &["#ffb5a7", "#fcd5ce", "#b8e0d2", "#d4a5a5", "#c9b1ff"],
     },
+    Palette {
+        name: "ciel",
+        bg_light: "#f3f8ff",
+        bg_dark: "#07111f",
+        colors: &["#7ec8ff", "#d7ecff", "#f6c453", "#3d7ec9", "#eef6ff"],
+    },
+    Palette {
+        name: "terre",
+        bg_light: "#f7f1e6",
+        bg_dark: "#1a120c",
+        colors: &["#c46b3a", "#e4c07a", "#6e8b62", "#8d3d2f", "#a97848"],
+    },
+    Palette {
+        name: "mer",
+        bg_light: "#e7f6f6",
+        bg_dark: "#02161c",
+        colors: &["#0f766e", "#2dd4bf", "#d8f6f3", "#083344", "#67e8f9"],
+    },
+    Palette {
+        name: "feu",
+        bg_light: "#fff3ea",
+        bg_dark: "#1a0904",
+        colors: &["#ff4d00", "#ffb703", "#ffd60a", "#9d0208", "#ff8a3d"],
+    },
 ];
 
 pub const PALETTE_COUNT: usize = PALETTES.len();
@@ -70,6 +94,10 @@ pub enum Theme {
     Oceanic,
     Neon,
     Pastel,
+    Ciel,
+    Terre,
+    Mer,
+    Feu,
 }
 
 impl Theme {
@@ -84,6 +112,10 @@ impl Theme {
             "oceanic" => Some(Theme::Oceanic),
             "neon" => Some(Theme::Neon),
             "pastel" => Some(Theme::Pastel),
+            "ciel" => Some(Theme::Ciel),
+            "terre" => Some(Theme::Terre),
+            "mer" => Some(Theme::Mer),
+            "feu" => Some(Theme::Feu),
             _ => None,
         }
     }
@@ -98,6 +130,10 @@ impl Theme {
             Theme::Oceanic => 5,
             Theme::Neon => 6,
             Theme::Pastel => 7,
+            Theme::Ciel => 8,
+            Theme::Terre => 9,
+            Theme::Mer => 10,
+            Theme::Feu => 11,
         }
     }
 }
@@ -108,4 +144,18 @@ pub fn palette_by_index(index: usize) -> &'static Palette {
 
 pub fn palette_by_theme(theme: Theme) -> &'static Palette {
     palette_by_index(theme.index())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn elemental_themes_resolve() {
+        for name in ["ciel", "terre", "mer", "feu", "monochrome"] {
+            let theme = Theme::from_name(name).unwrap();
+            assert_eq!(palette_by_theme(theme).name, name);
+            assert_eq!(palette_by_theme(theme).colors.len(), 5);
+        }
+    }
 }

@@ -1,6 +1,6 @@
 # Janus Identicons
 
-Deterministic gradient-blob SVG identicons from any string. Three layers share one renderer:
+Deterministic SVG identicons from any string, with several visual engines. Three layers share one renderer:
 
 - **identicon-core** — pure Rust SVG engine
 - **identicon-wasm** — browser bindings (`wasm-bindgen`)
@@ -12,8 +12,10 @@ Deterministic gradient-blob SVG identicons from any string. Three layers share o
 
 ```bash
 cargo run -p identicon-api
+curl -i http://localhost:3000/
 curl -i http://localhost:3000/alice
 curl http://localhost:3000/alice?size=128&theme=nord&animated=true
+curl http://localhost:3000/alice?engine=crest&theme=nord
 ```
 
 ### Container
@@ -46,6 +48,7 @@ let svg = render_identicon("alice");
 
 let mut opts = RenderOptions::default();
 opts.theme = Some(Theme::Sunset);
+opts.engine = identicon_core::Engine::Crest;
 opts.animated = true;
 let svg = identicon_core::render_identicon_with_options("alice", &opts).unwrap();
 ```
@@ -99,7 +102,21 @@ Local `npm publish` still needs `npm login` and membership in the `@janus-iam` o
 
 ## Themes
 
-`aurora`, `sunset`, `synthwave`, `nord`, `monochrome`, `oceanic`, `neon`, `pastel`
+`aurora`, `sunset`, `synthwave`, `nord`, `monochrome`, `oceanic`, `neon`, `pastel`, `ciel`, `terre`, `mer`, `feu`
+
+## Engines
+
+`?engine=` selects the shape generator. Palettes stay the same across engines. When `engine` is omitted, the HTTP API and the WASM package use `ribbon`. The Rust library default (`RenderOptions::default()`) stays `blob`.
+
+| Engine | Figure |
+|--------|--------|
+| `blob` | Overlapping gradient blobs |
+| `crest` | Heraldic escutcheon: contour, partition, charge |
+| `voronoi` | Symmetric stained-glass tessellation |
+| `kaleido` | N-fold mandala, mirrored or not |
+| `ribbon` | Interlaced Lissajous ribbons |
+| `constellation` | Linked stars with one principal star |
+| `monogram` | Initials over a generative motif (falls back to `crest` when the input has no letter) |
 
 ## Development
 

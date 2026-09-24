@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-description = "Deterministic gradient-blob SVG identicon generator"
+description = "Deterministic SVG identicon generator with several visual engines"
 
 [dependencies]
 blake3 = "1"

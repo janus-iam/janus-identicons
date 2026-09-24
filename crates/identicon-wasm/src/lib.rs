@@ -1,4 +1,4 @@
-use identicon_core::{RenderError, RenderOptions, Theme};
+use identicon_core::{Engine, RenderError, RenderOptions, Theme};
 use wasm_bindgen::prelude::*;
 
 fn map_error(err: RenderError) -> JsValue {
@@ -7,7 +7,7 @@ fn map_error(err: RenderError) -> JsValue {
 
 #[wasm_bindgen]
 pub fn render_identicon(input: &str) -> Result<String, JsValue> {
-    identicon_core::try_render_identicon(input).map_err(map_error)
+    render_identicon_with_options(input, 256, None, true, false, None)
 }
 
 #[wasm_bindgen]
@@ -17,6 +17,7 @@ pub fn render_identicon_with_options(
     theme: Option<String>,
     background: bool,
     animated: bool,
+    engine: Option<String>,
 ) -> Result<String, JsValue> {
     let theme = match theme {
         Some(name) => {
@@ -24,12 +25,19 @@ pub fn render_identicon_with_options(
         }
         None => None,
     };
+    let engine = match engine {
+        Some(name) => {
+            Engine::from_name(&name).ok_or_else(|| JsValue::from_str("unknown engine"))?
+        }
+        None => Engine::Ribbon,
+    };
 
     let opts = RenderOptions {
         size,
         theme,
         background,
         animated,
+        engine,
     };
 
     identicon_core::render_identicon_with_options(input, &opts).map_err(map_error)
@@ -40,8 +48,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn wasm_exports_match_core() {
+    fn omitted_engine_defaults_to_ribbon() {
         let svg = render_identicon("alice").unwrap();
+        let ribbon = render_identicon_with_options("alice", 256, None, true, false, None).unwrap();
+        let blob =
+            render_identicon_with_options("alice", 256, None, true, false, Some("blob".into()))
+                .unwrap();
+        assert_eq!(svg, ribbon);
+        assert_ne!(svg, blob);
         assert!(svg.starts_with("<svg"));
     }
 }

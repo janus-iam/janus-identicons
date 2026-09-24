@@ -1,4 +1,5 @@
 use crate::blob::{RenderParams, generate_accents, generate_blob_specs, render_blobs};
+use crate::engines::{self, Ctx, Engine};
 use crate::hash::{hash_input, validate_input};
 use crate::palette::{palette_by_index, palette_by_theme};
 use crate::prng::Prng;
@@ -9,6 +10,21 @@ pub fn render_identicon_inner(input: &str, opts: &RenderOptions) -> Result<Strin
     validate_input(input)?;
     let hash = hash_input(input);
     let mut prng = Prng::from_seed(hash);
+
+    if opts.engine != Engine::Blob {
+        let palette = match opts.theme {
+            Some(theme) => palette_by_theme(theme),
+            None => palette_by_index(hash[31] as usize),
+        };
+        let ctx = Ctx::new(
+            clamp_size(opts.size),
+            palette,
+            &hash,
+            opts.animated,
+            opts.background,
+        );
+        return Ok(engines::render(opts.engine, input, ctx, &mut prng));
+    }
 
     let params = RenderParams::from_prng(&mut prng);
 
@@ -118,6 +134,82 @@ mod tests {
         };
         let svg = render_identicon_inner("alice", &opts).unwrap();
         assert!(svg.contains("<animate"));
+    }
+
+    fn engine_opts(engine: Engine, animated: bool) -> RenderOptions {
+        RenderOptions {
+            engine,
+            animated,
+            ..RenderOptions::default()
+        }
+    }
+
+    #[test]
+    fn every_engine_is_deterministic_and_distinct() {
+        for engine in Engine::ALL {
+            let a = render_identicon_inner("alice", &engine_opts(engine, false)).unwrap();
+            let b = render_identicon_inner("alice", &engine_opts(engine, false)).unwrap();
+            let c = render_identicon_inner("bob", &engine_opts(engine, false)).unwrap();
+            assert_eq!(a, b, "{engine:?} not deterministic");
+            assert_ne!(a, c, "{engine:?} does not depend on input");
+            assert!(a.starts_with("<svg") && a.ends_with("</svg>"), "{engine:?}");
+        }
+    }
+
+    #[test]
+    fn every_engine_stays_compact() {
+        for engine in Engine::ALL {
+            for input in [
+                "alice",
+                "bob",
+                "martin",
+                "jean.dupont@example.org",
+                "0123456789",
+            ] {
+                let svg = render_identicon_inner(input, &engine_opts(engine, true)).unwrap();
+                assert!(
+                    svg.len() < 24 * 1024,
+                    "{engine:?}/{input}: {} bytes",
+                    svg.len()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn every_engine_supports_animation() {
+        for engine in Engine::ALL {
+            let svg = render_identicon_inner("alice", &engine_opts(engine, true)).unwrap();
+            assert!(svg.contains("<animate"), "{engine:?}");
+        }
+    }
+
+    #[test]
+    fn engine_ids_are_unique_per_input() {
+        let a = render_identicon_inner("alice", &engine_opts(Engine::Crest, false)).unwrap();
+        let b = render_identicon_inner("bob", &engine_opts(Engine::Crest, false)).unwrap();
+        let id_of = |svg: &str| {
+            let start = svg.find("id=\"bg-").unwrap() + 4;
+            svg[start..start + 9].to_string()
+        };
+        assert_ne!(id_of(&a), id_of(&b));
+    }
+
+    #[test]
+    fn theme_changes_every_engine() {
+        for engine in Engine::ALL {
+            let nord = RenderOptions {
+                theme: Some(Theme::Nord),
+                ..engine_opts(engine, false)
+            };
+            let neon = RenderOptions {
+                theme: Some(Theme::Neon),
+                ..engine_opts(engine, false)
+            };
+            let a = render_identicon_inner("alice", &nord).unwrap();
+            let b = render_identicon_inner("alice", &neon).unwrap();
+            assert_ne!(a, b, "{engine:?}");
+        }
     }
 
     #[test]

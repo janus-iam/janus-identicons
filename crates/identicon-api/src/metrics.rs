@@ -91,6 +91,7 @@ impl Metrics {
 
 pub fn route_label(path: &str) -> &'static str {
     match path {
+        "/" => "/",
         "/health" => "/health",
         "/metrics" => "/metrics",
         _ => "/{input}",
