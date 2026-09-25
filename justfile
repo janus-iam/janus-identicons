@@ -1,4 +1,4 @@
-image := "identicon-api"
+image := "janus-identicon-api"
 port := "3000"
 wasm_crate := "crates/identicon-wasm"
 wasm_pkg_dir := wasm_crate + "/pkg"

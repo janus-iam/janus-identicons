@@ -21,8 +21,8 @@ curl http://localhost:3000/alice?engine=crest&theme=nord
 ### Container
 
 ```bash
-podman build -t identicon-api .
-podman run --rm -p 3000:3000 identicon-api
+podman build -t janus-identicon-api .
+podman run --rm -p 3000:3000 janus-identicon-api
 ```
 
 The [Containerfile](Containerfile) uses a multi-stage build and a distroless non-root runtime image.

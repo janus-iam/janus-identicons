@@ -11,7 +11,7 @@ concurrency:
     cancel-in-progress: true
 
 env:
-    IMAGE_NAME: identicon-api
+    IMAGE_NAME: janus-identicon-api
 
 jobs:
     build-and-push:
