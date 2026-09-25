@@ -39,6 +39,13 @@ Observability:
 - `GET /health` — `{"status":"ok"}`
 - `GET /metrics` — Prometheus text (`identicon_requests_total`, `identicon_render_duration_seconds`, `identicon_svg_size_bytes`)
 
+Each `http_request` span records the caller so web-app and mail traffic can be scoped later:
+
+- `origin` — `Origin` header
+- `referer_origin` — scheme and host from `Referer` (the path is omitted)
+- `user_agent` — `User-Agent` header
+- `audience` — `web`, `mail`, or `unknown`. `mail` matches known mail clients and image proxies. `web` is any other request that carries browser provenance (`Origin`, `Referer`, or `Sec-Fetch-*`). Probes and direct calls stay `unknown`.
+
 ### Rust library
 
 ```rust

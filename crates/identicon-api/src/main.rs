@@ -4,7 +4,7 @@ use axum::{
     Router,
     body::Body,
     extract::{Path, Query, State},
-    http::{HeaderValue, Request, StatusCode, header},
+    http::{HeaderMap, HeaderValue, Request, StatusCode, header},
     middleware::{self, Next},
     response::{IntoResponse, Response},
     routing::get,
@@ -220,6 +220,65 @@ fn etag_payload(input: &str, opts: &RenderOptions) -> String {
     )
 }
 
+fn header_str(headers: &HeaderMap, name: header::HeaderName) -> Option<&str> {
+    headers
+        .get(name)
+        .and_then(|value| value.to_str().ok())
+        .filter(|value| !value.is_empty())
+}
+
+/// Scheme and host of a `Referer` URL. The path is dropped so logs keep the origin only.
+fn referer_origin(headers: &HeaderMap) -> &str {
+    let Some(referer) = header_str(headers, header::REFERER) else {
+        return "";
+    };
+    let Some(scheme_end) = referer.find("://") else {
+        return "";
+    };
+    let authority_start = scheme_end + 3;
+    let rest = &referer[authority_start..];
+    let authority_len = rest.find(['/', '?', '#']).unwrap_or(rest.len());
+    if authority_len == 0 {
+        return "";
+    }
+    &referer[..authority_start + authority_len]
+}
+
+fn is_mail_user_agent(user_agent: &str) -> bool {
+    const MARKERS: &[&str] = &[
+        "googleimageproxy",
+        "yahoomailproxy",
+        "thunderbird",
+        "microsoft outlook",
+        "outlook-ios",
+        "outlook-android",
+        "superhuman",
+        "airmail",
+        "protonmail",
+        "mailspring",
+    ];
+    let user_agent = user_agent.to_ascii_lowercase();
+    MARKERS.iter().any(|marker| user_agent.contains(marker))
+}
+
+/// Coarse caller class recorded on each request so web-app and mail traffic can be scoped later.
+/// Mail image proxies win over browser headers. Browser provenance (`Origin`, `Referer`, or
+/// `Sec-Fetch-*`) is `web`. Everything else, including probes, stays `unknown`.
+fn request_audience(headers: &HeaderMap) -> &'static str {
+    if header_str(headers, header::USER_AGENT).is_some_and(is_mail_user_agent) {
+        return "mail";
+    }
+    if header_str(headers, header::ORIGIN).is_some()
+        || header_str(headers, header::REFERER).is_some()
+        || headers.contains_key("sec-fetch-site")
+        || headers.contains_key("sec-fetch-dest")
+        || headers.contains_key("sec-fetch-mode")
+    {
+        return "web";
+    }
+    "unknown"
+}
+
 fn init_tracing() {
     tracing_subscriber::fmt()
         .json()
@@ -243,12 +302,21 @@ fn app(state: AppState) -> Router {
         .layer(
             tower_http::trace::TraceLayer::new_for_http().make_span_with(
                 |request: &Request<Body>| {
+                    let headers = request.headers();
+                    let origin = header_str(headers, header::ORIGIN).unwrap_or("");
+                    let referer_origin = referer_origin(headers);
+                    let user_agent = header_str(headers, header::USER_AGENT).unwrap_or("");
+                    let audience = request_audience(headers);
                     tracing::span!(
                         Level::INFO,
                         "http_request",
                         method = %request.method(),
                         uri = %request.uri(),
                         route = route_label(request.uri().path()),
+                        origin,
+                        referer_origin,
+                        user_agent,
+                        audience,
                     )
                 },
             ),
@@ -281,6 +349,46 @@ mod tests {
     use axum::body::Body;
     use axum::http::Request;
     use tower::ServiceExt;
+
+    #[test]
+    fn audience_classifies_web_mail_and_unknown() {
+        let mut web = HeaderMap::new();
+        web.insert(
+            header::ORIGIN,
+            HeaderValue::from_static("https://app.example"),
+        );
+        assert_eq!(request_audience(&web), "web");
+
+        let mut referer_only = HeaderMap::new();
+        referer_only.insert(
+            header::REFERER,
+            HeaderValue::from_static("https://app.example/people/alice"),
+        );
+        assert_eq!(request_audience(&referer_only), "web");
+        assert_eq!(referer_origin(&referer_only), "https://app.example");
+
+        let mut mail = HeaderMap::new();
+        mail.insert(
+            header::USER_AGENT,
+            HeaderValue::from_static(
+                "Mozilla/5.0 (Windows NT 5.1; rv:11.0) Gecko Firefox/11.0 (via ggpht.com GoogleImageProxy)",
+            ),
+        );
+        mail.insert(
+            header::ORIGIN,
+            HeaderValue::from_static("https://app.example"),
+        );
+        assert_eq!(request_audience(&mail), "mail");
+
+        let mut probe = HeaderMap::new();
+        probe.insert(
+            header::USER_AGENT,
+            HeaderValue::from_static("kube-probe/1.30"),
+        );
+        assert_eq!(request_audience(&probe), "unknown");
+        assert_eq!(request_audience(&HeaderMap::new()), "unknown");
+        assert_eq!(referer_origin(&HeaderMap::new()), "");
+    }
 
     fn test_app() -> Router {
         app(AppState {
