@@ -1,0 +1,22 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Open pull requests when Rust crate dependencies can be updated.",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["cargo"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "extends": ["schedule:weekly"]
+  },
+  "vulnerabilityAlerts": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "description": "Refresh compatible crates in the weekly Cargo.lock update instead of one pull request per crate. Breaking upgrades, including incompatible 0.x bumps, stay as their own pull requests.",
+      "matchManagers": ["cargo"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "matchJsonata": ["isBreaking != true"],
+      "enabled": false
+    }
+  ]
+}
