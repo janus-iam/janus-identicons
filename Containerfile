@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.27
 FROM docker.io/library/rust:1-bookworm AS builder
 
 WORKDIR /build
