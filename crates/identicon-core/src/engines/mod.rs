@@ -1,3 +1,4 @@
+pub mod character;
 pub mod common;
 pub mod constellation;
 pub mod crest;
@@ -29,10 +30,12 @@ pub enum Engine {
     Constellation,
     /// Initials over a generative motif.
     Monogram,
+    /// Layered character: one shared face, hat, glasses, neck accessory, scenic background.
+    Character,
 }
 
 impl Engine {
-    pub const ALL: [Engine; 7] = [
+    pub const ALL: [Engine; 8] = [
         Engine::Blob,
         Engine::Crest,
         Engine::Voronoi,
@@ -40,6 +43,7 @@ impl Engine {
         Engine::Ribbon,
         Engine::Constellation,
         Engine::Monogram,
+        Engine::Character,
     ];
 
     pub fn from_name(name: &str) -> Option<Self> {
@@ -51,6 +55,7 @@ impl Engine {
             "ribbon" => Some(Engine::Ribbon),
             "constellation" => Some(Engine::Constellation),
             "monogram" => Some(Engine::Monogram),
+            "character" => Some(Engine::Character),
             _ => None,
         }
     }
@@ -64,6 +69,7 @@ impl Engine {
             Engine::Ribbon => "ribbon",
             Engine::Constellation => "constellation",
             Engine::Monogram => "monogram",
+            Engine::Character => "character",
         }
     }
 }
@@ -79,6 +85,7 @@ pub fn render(engine: Engine, input: &str, mut ctx: Ctx<'_>, prng: &mut Prng) ->
         Engine::Ribbon => ribbon::render(&mut ctx, prng),
         Engine::Constellation => constellation::render(&mut ctx, prng),
         Engine::Monogram => monogram::render(&mut ctx, prng, input),
+        Engine::Character => character::render(&mut ctx, prng),
     }
     ctx.finish();
     ctx.into_string()

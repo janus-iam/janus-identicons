@@ -47,7 +47,7 @@ struct IdenticonQuery {
     #[param(example = false)]
     animated: Option<bool>,
     /// Shape engine. Defaults to `ribbon`.
-    /// Valid: blob, crest, voronoi, kaleido, ribbon, constellation, monogram.
+    /// Valid: blob, crest, voronoi, kaleido, ribbon, constellation, monogram, character.
     #[param(example = "ribbon")]
     engine: Option<String>,
 }
@@ -218,7 +218,7 @@ async fn identicon_handler(
                 state.metrics.record_render(400, Duration::ZERO, 0);
                 return (
                     StatusCode::BAD_REQUEST,
-                    "unknown engine; valid: blob, crest, voronoi, kaleido, ribbon, constellation, monogram",
+                    "unknown engine; valid: blob, crest, voronoi, kaleido, ribbon, constellation, monogram, character",
                 )
                     .into_response();
             }

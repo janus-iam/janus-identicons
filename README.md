@@ -16,6 +16,7 @@ curl -i http://localhost:3000/
 curl -i http://localhost:3000/v1/alice
 curl http://localhost:3000/v1/alice?size=128&theme=nord&animated=true
 curl http://localhost:3000/v1/alice?engine=crest&theme=nord
+curl http://localhost:3000/v1/alice?engine=character&theme=pastel
 ```
 
 ### Container
@@ -131,6 +132,7 @@ Local `npm publish` still needs `npm login` and membership in the `@janus-iam` o
 | `ribbon` | Interlaced Lissajous ribbons |
 | `constellation` | Linked stars with one principal star |
 | `monogram` | Initials over a generative motif (falls back to `crest` when the input has no letter) |
+| `character` | Layered character: one shared face, plus a hat, glasses, a neck accessory, and a scenic background (sky, mountain, sea, forest, sunset, beach, night, snow) |
 
 ## Development
 
